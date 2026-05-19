@@ -1,18 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
-import { MatButtonModule } from "@angular/material/button";
-import { MatCardModule } from "@angular/material/card";
-import { MatCheckboxModule } from "@angular/material/checkbox";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatIconModule } from "@angular/material/icon";
-import { MatInputModule } from "@angular/material/input";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatSelectModule } from "@angular/material/select";
-import { MatSidenavModule } from "@angular/material/sidenav";
-import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { ScrollingModule } from "@angular/cdk/scrolling";
 import { BehaviorSubject, filter, startWith } from "rxjs";
 import { PokemonStore } from "../../state/pokemon.store";
 import { pokemonSearchResults$ } from "../../state/pokemon.selectors";
@@ -40,22 +29,7 @@ type SortKey =
 @Component({
   selector: "app-pokedex-page",
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatSidenavModule,
-    MatSlideToggleModule,
-    ScrollingModule,
-    TypeBadgeComponent,
-    RouterOutlet,
-  ],
+  imports: [ReactiveFormsModule, TypeBadgeComponent, RouterOutlet],
   templateUrl: "./pokedex-page.component.html",
   styleUrl: "./pokedex-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -116,6 +90,62 @@ export class PokedexPageComponent {
       });
   });
   public readonly selectedIds = signal<number[]>([]);
+
+  /**
+   * Updates the selected type from a native select value.
+   *
+   * @param value - Native select value
+   */
+  public setTypeFromValue(value: string): void {
+    this.selectedType.set(value ? (value as PokemonType) : null);
+    this.pageIndex.set(0);
+  }
+
+  /**
+   * Updates page size from a native select value.
+   *
+   * @param value - Native select value
+   */
+  public setPageSize(value: string): void {
+    const size = Number(value);
+    if (size === 10 || size === 25 || size === 50) {
+      this.pageSize.set(size);
+      this.pageIndex.set(0);
+    }
+  }
+
+  /**
+   * Updates the minimum total-stat filter.
+   *
+   * @param target - Input event target
+   */
+  public setMinTotal(target: EventTarget | null): void {
+    this.minTotal.set(this.numberFromTarget(target, 0));
+    this.pageIndex.set(0);
+  }
+
+  /**
+   * Updates the maximum total-stat filter.
+   *
+   * @param target - Input event target
+   */
+  public setMaxTotal(target: EventTarget | null): void {
+    this.maxTotal.set(this.numberFromTarget(target, 800));
+    this.pageIndex.set(0);
+  }
+
+  /**
+   * Reads a number from a native input target.
+   *
+   * @param target - Input event target
+   * @param fallback - Fallback value
+   * @returns Parsed number or fallback
+   */
+  private numberFromTarget(target: EventTarget | null, fallback: number): number {
+    const input = target as HTMLInputElement | null;
+    const value = input?.valueAsNumber;
+    return Number.isFinite(value) ? value! : fallback;
+  }
 
   public readonly availableTypes = computed(() => {
     const list = this.state().pokemonIds.map((id) => this.state().pokemonById[id]).filter(Boolean) as PokemonListItem[];

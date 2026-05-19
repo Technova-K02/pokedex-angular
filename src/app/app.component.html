@@ -1,49 +1,39 @@
-<mat-sidenav-container class="layout">
-  <mat-sidenav
-    class="sidenav"
-    [mode]="'side'"
-    [opened]="sidebarOpen()"
-    [fixedInViewport]="true"
-    [fixedTopGap]="56"
-  >
-    <div class="sidenav-header">
-      <div class="brand">
-        <span class="brand-mark">PK</span>
-        <span class="brand-name">Trainer Dashboard</span>
-      </div>
+<div class="layout" [class.sidebar-collapsed]="!sidebarOpen()">
+  <aside class="sidenav">
+    <div class="brand">
+      <span class="brand-mark">PK</span>
+      <span class="brand-name">Trainer Dashboard</span>
     </div>
 
-    <mat-nav-list class="nav">
+    <nav class="nav" aria-label="Primary">
       @for (item of navItems(); track item.route) {
         <a
-          mat-list-item
           [routerLink]="item.route"
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: true }"
+          [attr.aria-label]="item.label"
         >
-          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          <span matListItemTitle>{{ item.label }}</span>
+          <span class="nav-icon">{{ item.icon }}</span>
+          <span class="nav-label">{{ item.label }}</span>
         </a>
       }
-    </mat-nav-list>
-  </mat-sidenav>
+    </nav>
+  </aside>
 
-  <mat-sidenav-content class="content">
-    <mat-toolbar class="toolbar" color="primary">
-      <button mat-icon-button type="button" (click)="toggleSidebar()" aria-label="Toggle sidebar">
-        <mat-icon>menu</mat-icon>
+  <section class="content">
+    <header class="toolbar">
+      <button class="icon-button" type="button" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+        <span></span>
+        <span></span>
+        <span></span>
       </button>
-      <span class="toolbar-title">Pokédex Trainer Dashboard</span>
-      <span class="spacer"></span>
-      <a mat-button routerLink="/profile">
-        <mat-icon>person</mat-icon>
-        <span>Profile</span>
-      </a>
-    </mat-toolbar>
+      <span class="toolbar-title">Pokedex Trainer Dashboard</span>
+      <a class="profile-link" routerLink="/profile">Profile</a>
+    </header>
 
     <main class="main">
       <router-outlet />
     </main>
-  </mat-sidenav-content>
-</mat-sidenav-container>
+  </section>
+</div>
 

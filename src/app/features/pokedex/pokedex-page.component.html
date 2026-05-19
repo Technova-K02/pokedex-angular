@@ -1,88 +1,89 @@
-<mat-drawer-container class="drawer">
-  <mat-drawer-content class="drawer-content">
+<section class="pokedex-shell">
+  <div class="drawer-content">
     <div class="header">
       <div class="title">
-        <h1>Pokédex</h1>
-        <p>Filter, sort, and select Pokémon. Click a row to open details.</p>
+        <h1>Pokedex</h1>
+        <p>Filter, sort, and select Pokemon. Click a row to open details.</p>
       </div>
 
       <div class="actions">
-        <mat-form-field appearance="outline" class="search">
-          <mat-icon matPrefix>search</mat-icon>
-          <input matInput [formControl]="searchControl" placeholder="Search by name" />
-        </mat-form-field>
+        <label class="field search">
+          <span>Search</span>
+          <input [formControl]="searchControl" placeholder="Search by name" />
+        </label>
 
-        <mat-slide-toggle [checked]="mode() === 'virtual'" (change)="mode.set($event.checked ? 'virtual' : 'paged')">
-          Virtual scroll
-        </mat-slide-toggle>
+        <label class="toggle">
+          <input
+            type="checkbox"
+            [checked]="mode() === 'virtual'"
+            (change)="mode.set($any($event.target).checked ? 'virtual' : 'paged')"
+          />
+          <span>Scroll mode</span>
+        </label>
 
-        <button mat-flat-button color="primary" type="button" (click)="loadMore()">
-          <mat-icon>download</mat-icon>
-          <span>Load More</span>
-        </button>
+        <button class="primary" type="button" (click)="loadMore()">Load More</button>
       </div>
     </div>
 
     <div class="filters">
-      <mat-form-field appearance="outline" class="type">
-        <mat-label>Type</mat-label>
-        <mat-select [value]="selectedType()" (valueChange)="selectedType.set($event)">
-          <mat-option [value]="null">All</mat-option>
+      <label class="field type">
+        <span>Type</span>
+        <select [value]="selectedType() ?? ''" (change)="setTypeFromValue($any($event.target).value)">
+          <option value="">All</option>
           @for (t of availableTypes(); track t) {
-            <mat-option [value]="t">{{ t }}</mat-option>
+            <option [value]="t">{{ t }}</option>
           }
-        </mat-select>
-      </mat-form-field>
+        </select>
+      </label>
 
       <div class="range">
         <label>Total stats range</label>
         <div class="range-row">
-          <input type="number" [value]="minTotal()" (input)="minTotal.set(($any($event.target).valueAsNumber ?? 0))" />
+          <input type="number" [value]="minTotal()" (input)="setMinTotal($event.target)" />
           <span>to</span>
-          <input type="number" [value]="maxTotal()" (input)="maxTotal.set(($any($event.target).valueAsNumber ?? 800))" />
+          <input type="number" [value]="maxTotal()" (input)="setMaxTotal($event.target)" />
         </div>
       </div>
 
       <div class="paging" [class.disabled]="mode() === 'virtual'">
-        <mat-form-field appearance="outline" class="page-size">
-          <mat-label>Page size</mat-label>
-          <mat-select [value]="pageSize()" (valueChange)="pageSize.set($event)">
-            <mat-option [value]="10">10</mat-option>
-            <mat-option [value]="25">25</mat-option>
-            <mat-option [value]="50">50</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <label class="field page-size">
+          <span>Page size</span>
+          <select [value]="pageSize()" (change)="setPageSize($any($event.target).value)">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+        </label>
 
-        <button mat-stroked-button type="button" (click)="prevPage()" [disabled]="mode() === 'virtual' || pageIndex() === 0">
+        <button type="button" (click)="prevPage()" [disabled]="mode() === 'virtual' || pageIndex() === 0">
           Prev
         </button>
-        <button mat-stroked-button type="button" (click)="nextPage()" [disabled]="mode() === 'virtual'">
+        <button type="button" (click)="nextPage()" [disabled]="mode() === 'virtual'">
           Next
         </button>
       </div>
 
       <div class="bulk">
-        <button mat-stroked-button type="button" (click)="addSelectedToTeam()" [disabled]="selectedIds().length === 0">
-          <mat-icon>playlist_add</mat-icon>
-          <span>Add to Team</span>
+        <button type="button" (click)="addSelectedToTeam()" [disabled]="selectedIds().length === 0">
+          Add to Team
         </button>
-        <button mat-icon-button type="button" (click)="clearSelection()" [disabled]="selectedIds().length === 0" aria-label="Clear selection">
-          <mat-icon>close</mat-icon>
+        <button type="button" (click)="clearSelection()" [disabled]="selectedIds().length === 0" aria-label="Clear selection">
+          Clear
         </button>
       </div>
     </div>
 
     @if (error()) {
-      <mat-card class="error">
-        <mat-icon>error</mat-icon>
-        <div>{{ error() }}</div>
-      </mat-card>
+      <div class="error">
+        <strong>Request failed</strong>
+        <span>{{ error() }}</span>
+      </div>
     }
 
     @if (loading()) {
       <div class="loading">
-        <mat-progress-spinner mode="indeterminate" diameter="32" />
-        <span>Loading Pokémon…</span>
+        <span class="spinner"></span>
+        <span>Loading Pokemon...</span>
       </div>
     }
 
@@ -101,65 +102,46 @@
         <button class="th stat" type="button" (click)="setSort('total')">Total</button>
       </div>
 
-      @if (mode() === 'virtual') {
-        <cdk-virtual-scroll-viewport class="viewport" [itemSize]="56">
-          <div class="tbody">
-            <div class="tr" *cdkVirtualFor="let p of filteredSorted(); trackBy: trackById" (click)="openDetails(p.id)">
-              <div class="td select" (click)="$event.stopPropagation()">
-                <mat-checkbox [checked]="selectedIds().includes(p.id)" (change)="toggleSelected(p.id, $event.checked)"></mat-checkbox>
-              </div>
-              <div class="td sprite">
-                @if (p.spriteUrl) { <img [src]="p.spriteUrl" [alt]="p.name" /> }
-              </div>
-              <div class="td name">{{ p.name }}</div>
-              <div class="td types">
-                @for (t of p.types; track t) { <app-type-badge [type]="t" /> }
-              </div>
-              <div class="td stat">{{ stat(p, 'hp') }}</div>
-              <div class="td stat">{{ stat(p, 'attack') }}</div>
-              <div class="td stat">{{ stat(p, 'defense') }}</div>
-              <div class="td stat">{{ stat(p, 'special-attack') }}</div>
-              <div class="td stat">{{ stat(p, 'special-defense') }}</div>
-              <div class="td stat">{{ stat(p, 'speed') }}</div>
-              <div class="td stat">{{ total(p.stats) }}</div>
+      <div class="tbody" [class.scroll-mode]="mode() === 'virtual'">
+        @for (p of (mode() === 'virtual' ? filteredSorted() : pagedRows()); track p.id) {
+          <div class="tr" (click)="openDetails(p.id)">
+            <div class="td select" (click)="$event.stopPropagation()">
+              <input
+                type="checkbox"
+                [checked]="selectedIds().includes(p.id)"
+                (change)="toggleSelected(p.id, $any($event.target).checked)"
+                [attr.aria-label]="'Select ' + p.name"
+              />
             </div>
+            <div class="td sprite">
+              @if (p.spriteUrl) {
+                <img [src]="p.spriteUrl" [alt]="p.name" loading="lazy" />
+              }
+            </div>
+            <div class="td name">{{ p.name }}</div>
+            <div class="td types">
+              @for (t of p.types; track t) {
+                <app-type-badge [type]="t" />
+              }
+            </div>
+            <div class="td stat">{{ stat(p, 'hp') }}</div>
+            <div class="td stat">{{ stat(p, 'attack') }}</div>
+            <div class="td stat">{{ stat(p, 'defense') }}</div>
+            <div class="td stat">{{ stat(p, 'special-attack') }}</div>
+            <div class="td stat">{{ stat(p, 'special-defense') }}</div>
+            <div class="td stat">{{ stat(p, 'speed') }}</div>
+            <div class="td stat">{{ total(p.stats) }}</div>
           </div>
-        </cdk-virtual-scroll-viewport>
-      } @else {
-        <div class="tbody">
-          @for (p of pagedRows(); track p.id) {
-            <div class="tr" (click)="openDetails(p.id)">
-              <div class="td select" (click)="$event.stopPropagation()">
-                <mat-checkbox [checked]="selectedIds().includes(p.id)" (change)="toggleSelected(p.id, $event.checked)"></mat-checkbox>
-              </div>
-              <div class="td sprite">
-                @if (p.spriteUrl) { <img [src]="p.spriteUrl" [alt]="p.name" /> }
-              </div>
-              <div class="td name">{{ p.name }}</div>
-              <div class="td types">
-                @for (t of p.types; track t) { <app-type-badge [type]="t" /> }
-              </div>
-              <div class="td stat">{{ stat(p, 'hp') }}</div>
-              <div class="td stat">{{ stat(p, 'attack') }}</div>
-              <div class="td stat">{{ stat(p, 'defense') }}</div>
-              <div class="td stat">{{ stat(p, 'special-attack') }}</div>
-              <div class="td stat">{{ stat(p, 'special-defense') }}</div>
-              <div class="td stat">{{ stat(p, 'speed') }}</div>
-              <div class="td stat">{{ total(p.stats) }}</div>
-            </div>
-          }
-        </div>
-      }
+        }
+      </div>
     </div>
-  </mat-drawer-content>
+  </div>
 
-  <mat-drawer
-    class="detail"
-    position="end"
-    mode="over"
-    [opened]="selectedPokemonId() !== null"
-    (closedStart)="closeDetails()"
-  >
-    <router-outlet />
-  </mat-drawer>
-</mat-drawer-container>
+  @if (selectedPokemonId() !== null) {
+    <aside class="detail" aria-label="Pokemon details">
+      <button class="close" type="button" (click)="closeDetails()" aria-label="Close details">Close</button>
+      <router-outlet />
+    </aside>
+  }
+</section>
+

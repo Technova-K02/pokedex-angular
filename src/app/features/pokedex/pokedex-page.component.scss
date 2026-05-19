@@ -1,5 +1,6 @@
-.drawer {
-  height: calc(100vh - 56px);
+.pokedex-shell {
+  position: relative;
+  min-height: calc(100vh - 96px);
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -11,9 +12,24 @@
 }
 
 .detail {
+  position: fixed;
+  top: 56px;
+  right: 0;
+  z-index: 30;
   width: min(520px, 92vw);
+  height: calc(100vh - 56px);
+  overflow: auto;
   background: rgba(10, 15, 28, 0.98);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: -18px 0 42px rgba(0, 0, 0, 0.35);
+}
+
+.close {
+  position: sticky;
+  top: 10px;
+  z-index: 2;
+  float: right;
+  margin: 10px 10px 0 0;
 }
 
 .header {
@@ -37,18 +53,71 @@
 .actions {
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: end;
   flex-wrap: wrap;
 }
 
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.field input,
+.field select,
+.range-row input {
+  min-height: 38px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e7eefc;
+}
+
+.field select option {
+  color: #0b1220;
+}
+
 .search {
-  width: min(420px, 72vw);
+  width: min(360px, 72vw);
+}
+
+.toggle {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.86;
+}
+
+button,
+.primary {
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e7eefc;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.primary {
+  background: rgba(96, 165, 250, 0.22);
+  border-color: rgba(96, 165, 250, 0.38);
 }
 
 .filters {
   margin-top: 12px;
   display: grid;
-  grid-template-columns: 240px 1fr auto auto;
+  grid-template-columns: 180px 1fr auto auto;
   gap: 12px;
   align-items: end;
 }
@@ -74,21 +143,20 @@
 
 .range-row input {
   width: 92px;
-  padding: 10px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.03);
-  color: inherit;
 }
 
 .paging {
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: end;
+}
+
+.paging.disabled {
+  opacity: 0.55;
 }
 
 .page-size {
-  width: 130px;
+  width: 110px;
 }
 
 .bulk {
@@ -105,6 +173,21 @@
   opacity: 0.85;
 }
 
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-top-color: #93c5fd;
+  border-radius: 999px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .error {
   margin-top: 16px;
   padding: 12px;
@@ -119,12 +202,13 @@
 .table {
   margin-top: 12px;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: auto;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .thead,
 .tr {
+  min-width: 1010px;
   display: grid;
   grid-template-columns: 44px 64px 180px 1fr repeat(7, 78px);
   gap: 0;
@@ -132,29 +216,38 @@
 }
 
 .thead {
-  background: rgba(255, 255, 255, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #172033;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .th {
-  padding: 10px 10px;
+  padding: 10px;
   font-size: 12px;
-  opacity: 0.8;
+  opacity: 0.85;
   text-align: left;
 }
 
 button.th {
+  min-height: auto;
   appearance: none;
   border: 0;
   background: transparent;
   color: inherit;
   cursor: pointer;
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .tbody {
   background: rgba(255, 255, 255, 0.02);
+}
+
+.tbody.scroll-mode {
+  max-height: 62vh;
+  overflow: auto;
 }
 
 .tr {
@@ -177,7 +270,7 @@ button.th {
 
 .td.name {
   text-transform: capitalize;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .td.types {
@@ -196,9 +289,5 @@ button.th {
 .td.stat {
   text-align: right;
   font-variant-numeric: tabular-nums;
-}
-
-.viewport {
-  height: 62vh;
 }
 
