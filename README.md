@@ -39,6 +39,8 @@ npm run build:prod
 npm run serve:dist
 ```
 
+Then open: `http://localhost:4200/` (deep links like `/pokedex` will work).
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
