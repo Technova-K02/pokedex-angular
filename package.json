@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "local:graphql": "json-graphql-server db.js --port 4000",
+    "dev": "ng serve"
   },
   "private": true,
   "dependencies": {
