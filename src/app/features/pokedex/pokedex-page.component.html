@@ -36,6 +36,16 @@
         </select>
       </label>
 
+      <label class="field type">
+        <span>Highlight matchup</span>
+        <select [value]="highlightType() ?? ''" (change)="setHighlightTypeFromValue($any($event.target).value)">
+          <option value="">Off</option>
+          @for (t of availableTypes(); track t) {
+            <option [value]="t">{{ t }}</option>
+          }
+        </select>
+      </label>
+
       <div class="range">
         <label>Total stats range</label>
         <div class="range-row">
@@ -104,7 +114,12 @@
 
       <div class="tbody" [class.scroll-mode]="mode() === 'virtual'">
         @for (p of (mode() === 'virtual' ? filteredSorted() : pagedRows()); track p.id) {
-          <div class="tr" (click)="openDetails(p.id)">
+          <div
+            class="tr"
+            [appTypeHighlight]="highlightType()"
+            [appTypeHighlightTarget]="p.types"
+            (click)="openDetails(p.id)"
+          >
             <div class="td select" (click)="$event.stopPropagation()">
               <input
                 type="checkbox"

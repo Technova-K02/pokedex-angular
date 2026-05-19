@@ -176,6 +176,16 @@ select option {
   background: rgba(134, 239, 172, 0.08);
 }
 
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
 .suggestion img,
 .slot img {
   width: 44px;

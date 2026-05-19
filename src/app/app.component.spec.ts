@@ -1,29 +1,34 @@
-import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { TestBed } from "@angular/core/testing";
+import { provideRouter } from "@angular/router";
+import { AppComponent } from "./app.component";
 
-describe('AppComponent', () => {
+describe("AppComponent", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [provideRouter([])],
     }).compileComponents();
   });
 
-  it('should create the app', () => {
+  it("creates the app shell", () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
+
     expect(app).toBeTruthy();
+    expect(app.navItems().map((item) => item.route)).toEqual([
+      "/pokedex",
+      "/team-builder",
+      "/battles",
+      "/profile",
+    ]);
   });
 
-  it(`should have the 'pokedex-trainer-dashboard' title`, () => {
+  it("toggles the sidebar signal", () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('pokedex-trainer-dashboard');
-  });
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, pokedex-trainer-dashboard');
+    expect(app.sidebarOpen()).toBeTrue();
+    app.toggleSidebar();
+    expect(app.sidebarOpen()).toBeFalse();
   });
 });

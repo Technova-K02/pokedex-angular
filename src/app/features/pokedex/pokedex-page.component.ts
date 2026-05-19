@@ -10,6 +10,7 @@ import { PokemonListItem, PokemonType } from "../../api/models";
 import { TypeBadgeComponent } from "../../shared/type-badge/type-badge.component";
 import { TeamDraftService } from "../../shared/team-draft.service";
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from "@angular/router";
+import { TypeHighlightDirective } from "../../shared/type-highlight.directive";
 
 type SortKey =
   | "id"
@@ -29,7 +30,7 @@ type SortKey =
 @Component({
   selector: "app-pokedex-page",
   standalone: true,
-  imports: [ReactiveFormsModule, TypeBadgeComponent, RouterOutlet],
+  imports: [ReactiveFormsModule, TypeBadgeComponent, TypeHighlightDirective, RouterOutlet],
   templateUrl: "./pokedex-page.component.html",
   styleUrl: "./pokedex-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,6 +65,7 @@ export class PokedexPageComponent {
   public readonly pageIndex = signal(0);
 
   public readonly selectedType = signal<PokemonType | null>(null);
+  public readonly highlightType = signal<PokemonType | null>("fire");
   public readonly minTotal = signal(0);
   public readonly maxTotal = signal(800);
 
@@ -99,6 +101,15 @@ export class PokedexPageComponent {
   public setTypeFromValue(value: string): void {
     this.selectedType.set(value ? (value as PokemonType) : null);
     this.pageIndex.set(0);
+  }
+
+  /**
+   * Updates the attacking type used by row matchup highlighting.
+   *
+   * @param value - Native select value
+   */
+  public setHighlightTypeFromValue(value: string): void {
+    this.highlightType.set(value ? (value as PokemonType) : null);
   }
 
   /**

@@ -60,9 +60,9 @@
           <button
             class="suggestion"
             type="button"
-            draggable="true"
+            cdkDrag
+            [cdkDragData]="pokemon"
             (click)="addPokemon(pokemon)"
-            (dragstart)="startDrag(pokemon.id)"
           >
             @if (pokemon.spriteUrl) {
               <img [src]="pokemon.spriteUrl" [alt]="pokemon.name" loading="lazy" />
@@ -88,10 +88,10 @@
         <span>Drop or click Pokémon</span>
       </div>
 
-      <div class="slots" (dragover)="allowDrop($event)" (drop)="dropPokemon()">
+      <div class="slots" cdkDropList (cdkDropListDropped)="dropPokemon($event)">
         @for (slot of [0, 1, 2, 3, 4, 5]; track slot) {
           @if (selectedPokemon()[slot]; as pokemon) {
-            <article class="slot filled">
+            <article class="slot filled" cdkDrag [cdkDragData]="pokemon">
               @if (pokemon.spriteUrl) {
                 <img [src]="pokemon.spriteUrl" [alt]="pokemon.name" loading="lazy" />
               }

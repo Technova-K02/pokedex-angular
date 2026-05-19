@@ -7,34 +7,34 @@ import {
   signal,
 } from "@angular/core";
 import { takeUntilDestroyed, toSignal } from "@angular/core/rxjs-interop";
+import { CdkDragDrop, DragDropModule } from "@angular/cdk/drag-drop";
 import {
   AbstractControl,
-  AsyncValidatorFn,
   FormArray,
   FormControl,
   FormGroup,
   ReactiveFormsModule,
-  ValidationErrors,
   Validators,
 } from "@angular/forms";
-import { map, Observable, startWith, timer } from "rxjs";
+import { startWith } from "rxjs";
 import { PokemonListItem } from "../../api/models";
 import { totalBaseStats } from "../../api/pokeapi.util";
 import { PokemonStore } from "../../state/pokemon.store";
 import { TrainerStore } from "../../state/trainer.store";
 import { TeamDraftService } from "../../shared/team-draft.service";
 import { TypeBadgeComponent } from "../../shared/type-badge/type-badge.component";
+import { evTotalValidator, teamNameUniqueValidator } from "./team-builder.validators";
 
 const HELD_ITEMS = ["Leftovers", "Choice Scarf", "Focus Sash", "Life Orb", "Sitrus Berry"];
 const TIERS = ["OU", "UU", "RU", "NU"];
 
 /**
- * Advanced Team Builder form with async validation, FormArray member rows, and native drag/drop.
+ * Advanced Team Builder form with async validation, FormArray member rows, and CDK drag/drop.
  */
 @Component({
   selector: "app-team-builder-page",
   standalone: true,
-  imports: [ReactiveFormsModule, TypeBadgeComponent],
+  imports: [ReactiveFormsModule, DragDropModule, TypeBadgeComponent],
   templateUrl: "./team-builder-page.component.html",
   styleUrl: "./team-builder-page.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,7 +46,6 @@ export class TeamBuilderPageComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   public readonly searchControl = new FormControl<string>("", { nonNullable: true });
-  public readonly draggedPokemonId = signal<number | null>(null);
   public readonly selectedIds = signal<number[]>([]);
   public readonly saveMessage = signal<string | null>(null);
 
@@ -64,7 +63,7 @@ export class TeamBuilderPageComponent {
     teamName: new FormControl("", {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(3), Validators.maxLength(30)],
-      asyncValidators: [this.uniqueTeamNameValidator()],
+      asyncValidators: [teamNameUniqueValidator(() => this.trainerStore.getSnapshot().teams)],
     }),
     competitiveMode: new FormControl(false, { nonNullable: true }),
     tier: new FormControl("OU", { nonNullable: true }),
@@ -165,33 +164,15 @@ export class TeamBuilderPageComponent {
   }
 
   /**
-   * Starts a native drag operation from a Pokemon suggestion.
+   * Handles a CDK drag/drop event from search suggestions into team slots.
    *
-   * @param id - Pokemon id
+   * @param event - CDK drag/drop event with Pokemon data
    */
-  public startDrag(id: number): void {
-    this.draggedPokemonId.set(id);
-  }
-
-  /**
-   * Allows a native drop event onto the team slots.
-   *
-   * @param event - Drag event
-   */
-  public allowDrop(event: DragEvent): void {
-    event.preventDefault();
-  }
-
-  /**
-   * Drops the dragged Pokemon into the team when there is capacity.
-   */
-  public dropPokemon(): void {
-    const id = this.draggedPokemonId();
-    const pokemon = id ? this.pokemonState().pokemonById[id] : null;
+  public dropPokemon(event: CdkDragDrop<unknown>): void {
+    const pokemon = event.item.data as PokemonListItem | undefined;
     if (pokemon) {
       this.addPokemon(pokemon);
     }
-    this.draggedPokemonId.set(null);
   }
 
   /**
@@ -306,44 +287,8 @@ export class TeamBuilderPageComponent {
           specialDefense: new FormControl(0, { nonNullable: true, validators: [Validators.min(0), Validators.max(252)] }),
           speed: new FormControl(0, { nonNullable: true, validators: [Validators.min(0), Validators.max(252)] }),
         },
-        { validators: [this.evTotalValidator()] },
+        { validators: [evTotalValidator()] },
       ),
     });
-  }
-
-  /**
-   * Ensures EV spreads do not exceed 510 total.
-   *
-   * @returns ValidationErrors when over budget
-   */
-  private evTotalValidator(): (control: AbstractControl) => ValidationErrors | null {
-    return (control: AbstractControl): ValidationErrors | null => {
-      const values = control.value as Record<string, number>;
-      const total = Object.values(values).reduce((sum, v) => sum + Number(v ?? 0), 0);
-      return total > 510 ? { evBudget: true } : null;
-    };
-  }
-
-  /**
-   * Async validator that checks team-name uniqueness against loaded teams.
-   *
-   * @returns AsyncValidatorFn
-   */
-  private uniqueTeamNameValidator(): AsyncValidatorFn {
-    return (control: AbstractControl): Observable<ValidationErrors | null> =>
-      timer(300).pipe(
-        map(() => {
-          const value = String(control.value ?? "").trim().toLowerCase();
-          if (!value) {
-            return null;
-          }
-
-          const exists = this.trainerStore
-            .getSnapshot()
-            .teams.some((team) => team.name.trim().toLowerCase() === value);
-
-          return exists ? { uniqueTeamName: true } : null;
-        }),
-      );
   }
 }

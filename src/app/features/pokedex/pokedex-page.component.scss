@@ -117,7 +117,7 @@ button:disabled {
 .filters {
   margin-top: 12px;
   display: grid;
-  grid-template-columns: 180px 1fr auto auto;
+  grid-template-columns: 180px 190px 1fr auto auto;
   gap: 12px;
   align-items: end;
 }
@@ -252,12 +252,23 @@ button.th {
 
 .tr {
   height: 56px;
+  border-left: 3px solid transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
 }
 
 .tr:hover {
   background: rgba(255, 255, 255, 0.05);
+}
+
+.tr.type-highlight-super {
+  border-left-color: #22c55e;
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.tr.type-highlight-weak {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
 }
 
 .td {
