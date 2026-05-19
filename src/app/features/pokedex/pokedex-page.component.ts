@@ -44,7 +44,7 @@ export class PokedexPageComponent {
   public readonly searchControl = new FormControl<string>("", { nonNullable: true });
 
   private readonly limit = 20;
-  private readonly offsetSubject = new BehaviorSubject<number>(0);
+  private readonly offsetSubject = new BehaviorSubject<number>(20);
 
   public readonly state = toSignal(this.store.state$, { initialValue: this.store.getSnapshot() });
   public readonly pokemonList$ = this.store.selectPokemonList();

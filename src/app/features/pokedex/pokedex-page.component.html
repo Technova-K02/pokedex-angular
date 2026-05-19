@@ -116,6 +116,8 @@
             <div class="td sprite">
               @if (p.spriteUrl) {
                 <img [src]="p.spriteUrl" [alt]="p.name" loading="lazy" />
+              } @else {
+                <span class="sprite-fallback">#{{ p.id }}</span>
               }
             </div>
             <div class="td name">{{ p.name }}</div>
@@ -144,4 +146,3 @@
     </aside>
   }
 </section>
-

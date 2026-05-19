@@ -1,7 +1,8 @@
-import { DestroyRef, Injectable, inject } from "@angular/core";
-import { BehaviorSubject, catchError, finalize, map, Observable, of, tap } from "rxjs";
-import { PokemonApiService, TypeEfficacyRow } from "../api/pokemon-api.service";
+import { DestroyRef, Injectable, Injector, inject } from "@angular/core";
+import { BehaviorSubject, catchError, defer, finalize, from, map, Observable, of, switchMap, tap } from "rxjs";
+import type { PokemonApiService, TypeEfficacyRow } from "../api/pokemon-api.service";
 import { PokemonDetails, PokemonListItem } from "../api/models";
+import { POKEMON_SEED } from "../api/pokemon-seed";
 
 export interface PokemonState {
   pokemonById: Record<number, PokemonListItem>;
@@ -15,8 +16,8 @@ export interface PokemonState {
 }
 
 const INITIAL_STATE: PokemonState = {
-  pokemonById: {},
-  pokemonIds: [],
+  pokemonById: Object.fromEntries(POKEMON_SEED.map((p) => [p.id, p])),
+  pokemonIds: POKEMON_SEED.map((p) => p.id),
   detailsById: {},
   typeEfficacies: null,
   loadingList: false,
@@ -31,7 +32,7 @@ const INITIAL_STATE: PokemonState = {
  */
 @Injectable({ providedIn: "root" })
 export class PokemonStore {
-  private readonly api = inject(PokemonApiService);
+  private readonly injector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly stateSubject = new BehaviorSubject<PokemonState>(INITIAL_STATE);
@@ -60,7 +61,8 @@ export class PokemonStore {
   public loadPokemonPage(limit: number, offset: number): Observable<PokemonListItem[]> {
     this.patchState({ loadingList: true, error: null });
 
-    return this.api.getPokemonPage(limit, offset).pipe(
+    return this.getApi().pipe(
+      switchMap((api) => api.getPokemonPage(limit, offset)),
       tap((items) => {
         const current = this.getSnapshot();
         const nextById = { ...current.pokemonById };
@@ -97,7 +99,8 @@ export class PokemonStore {
     }
 
     this.patchState({ loadingDetails: true, error: null });
-    return this.api.getPokemonDetails(id).pipe(
+    return this.getApi().pipe(
+      switchMap((api) => api.getPokemonDetails(id)),
       tap((details) => {
         const current = this.getSnapshot();
         this.patchState({
@@ -128,7 +131,8 @@ export class PokemonStore {
     }
 
     this.patchState({ loadingTypes: true, error: null });
-    return this.api.getTypeEfficacies().pipe(
+    return this.getApi().pipe(
+      switchMap((api) => api.getTypeEfficacies()),
       tap((rows) => this.patchState({ typeEfficacies: rows })),
       finalize(() => this.patchState({ loadingTypes: false })),
       catchError((err) => {
@@ -159,6 +163,17 @@ export class PokemonStore {
   }
 
   /**
+   * Lazily imports the PokéAPI service so the first Pokedex paint does not load Apollo.
+   *
+   * @returns Observable<PokemonApiService>
+   */
+  private getApi(): Observable<PokemonApiService> {
+    return defer(() => from(import("../api/pokemon-api.service"))).pipe(
+      map(({ PokemonApiService }) => this.injector.get(PokemonApiService)),
+    );
+  }
+
+  /**
    * Converts unknown errors into a user-friendly message.
    *
    * @param err - Unknown error
@@ -171,4 +186,3 @@ export class PokemonStore {
     return "Unknown error";
   }
 }
-

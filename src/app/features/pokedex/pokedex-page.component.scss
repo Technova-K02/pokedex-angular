@@ -286,8 +286,19 @@ button.th {
   image-rendering: pixelated;
 }
 
+.sprite-fallback {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(231, 238, 252, 0.78);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .td.stat {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-

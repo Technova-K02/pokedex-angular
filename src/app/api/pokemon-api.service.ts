@@ -220,9 +220,8 @@ export class PokemonApiService {
       weight: p.weight,
       types: p.pokemon_v2_pokemontypes.map((t: any) => t.pokemon_v2_type.name),
       stats,
-      // Fast path: avoid requesting/parsing the large `sprites` JSON blob for list pages.
-      // The default sprite is stable and lightweight to derive from id.
-      spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`,
+      // Keep list rows image-free so first paint is not blocked by external sprite CDNs.
+      spriteUrl: null,
     };
   }
 
