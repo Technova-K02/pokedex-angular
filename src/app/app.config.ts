@@ -5,6 +5,7 @@ import { provideAnimations } from "@angular/platform-browser/animations";
 
 import { routes } from "./app.routes";
 import { provideGraphqlClients } from "./graphql/apollo.providers";
+import { provideCharts, withDefaultRegisterables } from "ng2-charts";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,5 +14,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideAnimations(),
     provideGraphqlClients(),
+    provideCharts(withDefaultRegisterables()),
   ],
 };
