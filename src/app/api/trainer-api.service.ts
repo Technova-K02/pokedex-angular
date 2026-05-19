@@ -142,7 +142,7 @@ export class TrainerApiService {
   public getTrainers(): Observable<Trainer[]> {
     return this.apollo
       .query<{ allTrainers: Trainer[] }>({ query: GET_TRAINERS, fetchPolicy: "network-only" })
-      .pipe(map((res) => res.data.allTrainers));
+      .pipe(map((res) => this.requireData(res.data, "GetTrainers").allTrainers));
   }
 
   /**
@@ -158,7 +158,7 @@ export class TrainerApiService {
         variables: { id: String(id) },
         fetchPolicy: "network-only",
       })
-      .pipe(map((res) => res.data.Trainer));
+      .pipe(map((res) => this.requireData(res.data, "GetTrainer").Trainer));
   }
 
   /**
@@ -174,7 +174,7 @@ export class TrainerApiService {
         variables: { trainerId: String(trainerId) },
         fetchPolicy: "network-only",
       })
-      .pipe(map((res) => res.data.allTeams));
+      .pipe(map((res) => this.requireData(res.data, "GetTeams").allTeams));
   }
 
   /**
@@ -190,7 +190,7 @@ export class TrainerApiService {
         variables: { trainerId: String(trainerId) },
         fetchPolicy: "network-only",
       })
-      .pipe(map((res) => res.data.allBattles));
+      .pipe(map((res) => this.requireData(res.data, "GetBattles").allBattles));
   }
 
   /**
@@ -204,7 +204,7 @@ export class TrainerApiService {
         query: GET_BATTLE_LOGS,
         fetchPolicy: "network-only",
       })
-      .pipe(map((res) => res.data.allBattleLogs));
+      .pipe(map((res) => this.requireData(res.data, "GetBattleLogs").allBattleLogs));
   }
 
   /**
@@ -219,7 +219,7 @@ export class TrainerApiService {
         mutation: CREATE_TEAM,
         variables: { data },
       })
-      .pipe(map((res) => res.data!.createTeam));
+      .pipe(map((res) => this.requireData(res.data, "CreateTeam").createTeam));
   }
 
   /**
@@ -235,7 +235,7 @@ export class TrainerApiService {
         mutation: UPDATE_TEAM,
         variables: { id: String(id), data },
       })
-      .pipe(map((res) => res.data!.updateTeam));
+      .pipe(map((res) => this.requireData(res.data, "UpdateTeam").updateTeam));
   }
 
   /**
@@ -266,7 +266,7 @@ export class TrainerApiService {
         mutation: UPDATE_TRAINER,
         variables: { id: String(id), data },
       })
-      .pipe(map((res) => res.data!.updateTrainer));
+      .pipe(map((res) => this.requireData(res.data, "UpdateTrainer").updateTrainer));
   }
 
   /**
@@ -281,7 +281,21 @@ export class TrainerApiService {
         mutation: LOG_BATTLE,
         variables: { data },
       })
-      .pipe(map((res) => res.data!.createBattle));
+      .pipe(map((res) => this.requireData(res.data, "CreateBattle").createBattle));
+  }
+
+  /**
+   * Requires GraphQL response data and converts empty responses into explicit errors.
+   *
+   * @param data - Possibly empty GraphQL data payload
+   * @param operation - Operation name for diagnostics
+   * @returns Non-null GraphQL data payload
+   */
+  private requireData<T>(data: T | null | undefined, operation: string): T {
+    if (!data) {
+      throw new Error(`${operation} returned no data`);
+    }
+
+    return data;
   }
 }
-

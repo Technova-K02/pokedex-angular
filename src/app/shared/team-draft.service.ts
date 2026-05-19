@@ -16,7 +16,16 @@ export class TeamDraftService {
    * @param ids - Pokemon ids
    */
   public add(ids: number[]): void {
-    const next = Array.from(new Set([...this.pokemonIds(), ...ids])).slice(0, 6);
+    this.set([...this.pokemonIds(), ...ids]);
+  }
+
+  /**
+   * Replaces the draft with a normalized set of ids.
+   *
+   * @param ids - Pokemon ids
+   */
+  public set(ids: number[]): void {
+    const next = Array.from(new Set(ids)).slice(0, 6);
     this.pokemonIds.set(next);
   }
 
@@ -58,4 +67,3 @@ export class TeamDraftService {
     }
   }
 }
-
