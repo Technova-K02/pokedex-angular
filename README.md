@@ -2,15 +2,42 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.26.
 
+## Project Dev Notes
+
+This assessment app uses:
+- Public PokéAPI GraphQL: `https://beta.pokeapi.co/graphql/v1beta` (queries)
+- Local json-graphql-server: `db.js` (queries + mutations), default port `4100` in this repo
+
 ## Development server
 
-To start a local development server, run:
+Terminal 1 (local GraphQL mock):
 
 ```bash
-ng serve
+npm run local:graphql
+```
+
+Terminal 2 (Angular dev server):
+
+```bash
+npm start
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+
+## Lower CPU / Faster Page Load
+
+If `ng serve` feels heavy on your machine, run a production build and serve the static output:
+
+Terminal 1 (local GraphQL mock):
+```bash
+npm run local:graphql
+```
+
+Terminal 2 (build + serve dist):
+```bash
+npm run build:prod
+npm run serve:dist
+```
 
 ## Code scaffolding
 
