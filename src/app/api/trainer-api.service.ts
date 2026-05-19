@@ -69,8 +69,8 @@ const GET_BATTLE_LOGS = gql`
 `;
 
 const CREATE_TEAM = gql`
-  mutation CreateTeam($data: TeamInput!) {
-    createTeam(data: $data) {
+  mutation CreateTeam($trainer_id: ID!, $name: String!, $pokemon_ids: [Int]!, $created_at: String!) {
+    createTeam(trainer_id: $trainer_id, name: $name, pokemon_ids: $pokemon_ids, created_at: $created_at) {
       id
       trainer_id
       name
@@ -81,8 +81,8 @@ const CREATE_TEAM = gql`
 `;
 
 const UPDATE_TEAM = gql`
-  mutation UpdateTeam($id: ID!, $data: TeamInput!) {
-    updateTeam(id: $id, data: $data) {
+  mutation UpdateTeam($id: ID!, $trainer_id: ID, $name: String, $pokemon_ids: [Int], $created_at: String) {
+    updateTeam(id: $id, trainer_id: $trainer_id, name: $name, pokemon_ids: $pokemon_ids, created_at: $created_at) {
       id
       trainer_id
       name
@@ -99,8 +99,15 @@ const DELETE_TEAM = gql`
 `;
 
 const UPDATE_TRAINER = gql`
-  mutation UpdateTrainer($id: ID!, $data: TrainerInput!) {
-    updateTrainer(id: $id, data: $data) {
+  mutation UpdateTrainer($id: ID!, $name: String, $badge_count: Int, $region: String, $avatar_url: String, $rank: String) {
+    updateTrainer(
+      id: $id
+      name: $name
+      badge_count: $badge_count
+      region: $region
+      avatar_url: $avatar_url
+      rank: $rank
+    ) {
       id
       name
       badge_count
@@ -112,8 +119,24 @@ const UPDATE_TRAINER = gql`
 `;
 
 const LOG_BATTLE = gql`
-  mutation CreateBattle($data: BattleInput!) {
-    createBattle(data: $data) {
+  mutation CreateBattle(
+    $trainer_id: ID!
+    $opponent_name: String!
+    $team_id: ID!
+    $result: String!
+    $date: String!
+    $score_trainer: Int!
+    $score_opponent: Int!
+  ) {
+    createBattle(
+      trainer_id: $trainer_id
+      opponent_name: $opponent_name
+      team_id: $team_id
+      result: $result
+      date: $date
+      score_trainer: $score_trainer
+      score_opponent: $score_opponent
+    ) {
       id
       trainer_id
       opponent_name
@@ -217,7 +240,12 @@ export class TrainerApiService {
     return this.apollo
       .mutate<{ createTeam: Team }>({
         mutation: CREATE_TEAM,
-        variables: { data },
+        variables: {
+          trainer_id: String(data.trainer_id),
+          name: data.name,
+          pokemon_ids: data.pokemon_ids,
+          created_at: data.created_at,
+        },
       })
       .pipe(map((res) => this.requireData(res.data, "CreateTeam").createTeam));
   }
@@ -233,7 +261,13 @@ export class TrainerApiService {
     return this.apollo
       .mutate<{ updateTeam: Team }>({
         mutation: UPDATE_TEAM,
-        variables: { id: String(id), data },
+        variables: this.stripUndefined({
+          id: String(id),
+          trainer_id: data.trainer_id === undefined ? undefined : String(data.trainer_id),
+          name: data.name,
+          pokemon_ids: data.pokemon_ids,
+          created_at: data.created_at,
+        }),
       })
       .pipe(map((res) => this.requireData(res.data, "UpdateTeam").updateTeam));
   }
@@ -264,7 +298,14 @@ export class TrainerApiService {
     return this.apollo
       .mutate<{ updateTrainer: Trainer }>({
         mutation: UPDATE_TRAINER,
-        variables: { id: String(id), data },
+        variables: this.stripUndefined({
+          id: String(id),
+          name: data.name,
+          badge_count: data.badge_count,
+          region: data.region,
+          avatar_url: data.avatar_url,
+          rank: data.rank,
+        }),
       })
       .pipe(map((res) => this.requireData(res.data, "UpdateTrainer").updateTrainer));
   }
@@ -279,9 +320,27 @@ export class TrainerApiService {
     return this.apollo
       .mutate<{ createBattle: Battle }>({
         mutation: LOG_BATTLE,
-        variables: { data },
+        variables: {
+          trainer_id: String(data.trainer_id),
+          opponent_name: data.opponent_name,
+          team_id: String(data.team_id),
+          result: data.result,
+          date: data.date,
+          score_trainer: data.score_trainer,
+          score_opponent: data.score_opponent,
+        },
       })
       .pipe(map((res) => this.requireData(res.data, "CreateBattle").createBattle));
+  }
+
+  /**
+   * Removes undefined GraphQL variables so optional mutation args are omitted cleanly.
+   *
+   * @param variables - Variables object
+   * @returns Variables object without undefined values
+   */
+  private stripUndefined<T extends Record<string, unknown>>(variables: T): Partial<T> {
+    return Object.fromEntries(Object.entries(variables).filter(([, value]) => value !== undefined)) as Partial<T>;
   }
 
   /**
