@@ -1,0 +1,52 @@
+<div class="header">
+  <div class="title">
+    <h1>Pokédex</h1>
+    <p>Browse Pokémon, inspect stats, and add them to teams.</p>
+  </div>
+
+  <div class="actions">
+    <mat-form-field appearance="outline" class="search">
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [formControl]="searchControl" placeholder="Search by name" />
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" type="button" (click)="loadMore()">
+      <mat-icon>download</mat-icon>
+      <span>Load More</span>
+    </button>
+  </div>
+</div>
+
+@if (error()) {
+  <mat-card class="error">
+    <mat-icon>error</mat-icon>
+    <div>{{ error() }}</div>
+  </mat-card>
+}
+
+@if (loading()) {
+  <div class="loading">
+    <mat-progress-spinner mode="indeterminate" diameter="32" />
+    <span>Loading Pokémon…</span>
+  </div>
+}
+
+<div class="list">
+  @for (p of visiblePokemon(); track p.id) {
+    <mat-card class="row">
+      <div class="sprite">
+        @if (p.spriteUrl) {
+          <img [src]="p.spriteUrl" [alt]="p.name" />
+        } @else {
+          <div class="sprite-fallback"></div>
+        }
+      </div>
+
+      <div class="meta">
+        <div class="name">{{ p.name }}</div>
+        <div class="sub">#{{ p.id }} · Total {{ total(p.stats) }}</div>
+      </div>
+    </mat-card>
+  }
+</div>
+

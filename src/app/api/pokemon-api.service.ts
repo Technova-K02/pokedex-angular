@@ -146,7 +146,7 @@ export class PokemonApiService {
       })
       .pipe(
         retry({ count: 3, delay: (_err, retryIndex) => timer(300 * (retryIndex + 1)) }),
-        map((res) => res.data.pokemon_v2_pokemon.map((p) => this.mapListItem(p))),
+        map((res) => (res.data?.pokemon_v2_pokemon ?? []).map((p) => this.mapListItem(p))),
       );
   }
 
@@ -167,7 +167,7 @@ export class PokemonApiService {
       })
       .pipe(
         retry({ count: 3, delay: (_err, retryIndex) => timer(300 * (retryIndex + 1)) }),
-        map((res) => this.mapDetails(res.data.pokemon_v2_pokemon_by_pk)),
+        map((res) => this.mapDetails(res.data?.pokemon_v2_pokemon_by_pk)),
       );
   }
 
@@ -194,7 +194,7 @@ export class PokemonApiService {
       .pipe(
         retry({ count: 3, delay: (_err, retryIndex) => timer(300 * (retryIndex + 1)) }),
         map((res) =>
-          res.data.pokemon_v2_type.flatMap((t) =>
+          (res.data?.pokemon_v2_type ?? []).flatMap((t) =>
             t.pokemon_v2_typeefficacies.map((e) => ({
               sourceType: t.name,
               targetType: e.pokemonV2TypeByTargetTypeId.name,
@@ -236,6 +236,22 @@ export class PokemonApiService {
    * @returns PokemonDetails
    */
   private mapDetails(p: any): PokemonDetails {
+    if (!p) {
+      // Should be unreachable in healthy responses, but keeps strict-mode safe.
+      return {
+        id: -1,
+        name: "",
+        height: 0,
+        weight: 0,
+        types: [],
+        stats: [],
+        spriteUrl: null,
+        abilities: [],
+        moves: [],
+        evolutionChain: [],
+        officialArtworkUrl: null,
+      };
+    }
     const base = this.mapListItem(p);
     const spriteJson = p.pokemon_v2_pokemonsprites?.[0]?.sprites ?? null;
     const officialArtworkUrl = (() => {
@@ -276,4 +292,3 @@ export class PokemonApiService {
     };
   }
 }
-
