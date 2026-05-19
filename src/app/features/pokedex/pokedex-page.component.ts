@@ -13,14 +13,14 @@ import { MatSidenavModule } from "@angular/material/sidenav";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ScrollingModule } from "@angular/cdk/scrolling";
-import { BehaviorSubject, startWith } from "rxjs";
+import { BehaviorSubject, filter, startWith } from "rxjs";
 import { PokemonStore } from "../../state/pokemon.store";
 import { pokemonSearchResults$ } from "../../state/pokemon.selectors";
 import { totalBaseStats } from "../../api/pokeapi.util";
 import { PokemonListItem, PokemonType } from "../../api/models";
 import { TypeBadgeComponent } from "../../shared/type-badge/type-badge.component";
-import { PokemonDetailPanelComponent } from "./pokemon-detail-panel/pokemon-detail-panel.component";
 import { TeamDraftService } from "../../shared/team-draft.service";
+import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from "@angular/router";
 
 type SortKey =
   | "id"
@@ -54,7 +54,7 @@ type SortKey =
     MatSlideToggleModule,
     ScrollingModule,
     TypeBadgeComponent,
-    PokemonDetailPanelComponent,
+    RouterOutlet,
   ],
   templateUrl: "./pokedex-page.component.html",
   styleUrl: "./pokedex-page.component.scss",
@@ -64,6 +64,8 @@ export class PokedexPageComponent {
   private readonly store = inject(PokemonStore);
   private readonly destroyRef = inject(DestroyRef);
   private readonly teamDraft = inject(TeamDraftService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   public readonly searchControl = new FormControl<string>("", { nonNullable: true });
 
@@ -95,6 +97,24 @@ export class PokedexPageComponent {
   public readonly sortDir = signal<"asc" | "desc">("asc");
 
   public readonly selectedPokemonId = signal<number | null>(null);
+
+  /**
+   * Syncs the selected Pokemon id from the current child route (/:id).
+   */
+  public readonly routeSyncEffect = effect(() => {
+    // Subscribe once by leveraging the fact this effect is created during construction.
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        startWith(null),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        const raw = this.route.firstChild?.snapshot.paramMap.get("id") ?? null;
+        const id = raw ? Number(raw) : null;
+        this.selectedPokemonId.set(Number.isFinite(id) ? id : null);
+      });
+  });
   public readonly selectedIds = signal<number[]>([]);
 
   public readonly availableTypes = computed(() => {
@@ -242,14 +262,14 @@ export class PokedexPageComponent {
    * @param id - Pokemon id
    */
   public openDetails(id: number): void {
-    this.selectedPokemonId.set(id);
+    this.router.navigate([id], { relativeTo: this.route });
   }
 
   /**
    * Closes the slide-in detail panel.
    */
   public closeDetails(): void {
-    this.selectedPokemonId.set(null);
+    this.router.navigate(["/pokedex"]);
   }
 
   /**

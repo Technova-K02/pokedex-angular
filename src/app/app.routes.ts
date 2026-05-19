@@ -6,7 +6,19 @@ import { ProfilePageComponent } from "./features/profile/profile-page.component"
 
 export const routes: Routes = [
   { path: "", pathMatch: "full", redirectTo: "pokedex" },
-  { path: "pokedex", component: PokedexPageComponent },
+  {
+    path: "pokedex",
+    component: PokedexPageComponent,
+    children: [
+      {
+        path: ":id",
+        loadComponent: () =>
+          import("./features/pokedex/pokemon-detail-panel/pokemon-detail-panel.component").then(
+            (m) => m.PokemonDetailPanelComponent,
+          ),
+      },
+    ],
+  },
   { path: "team-builder", component: TeamBuilderPageComponent },
   { path: "battles", component: BattlesPageComponent },
   { path: "profile", component: ProfilePageComponent },

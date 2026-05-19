@@ -160,8 +160,6 @@
     [opened]="selectedPokemonId() !== null"
     (closedStart)="closeDetails()"
   >
-    @if (selectedPokemonId() !== null) {
-      <app-pokemon-detail-panel [pokemonId]="selectedPokemonId()" />
-    }
+    <router-outlet />
   </mat-drawer>
 </mat-drawer-container>

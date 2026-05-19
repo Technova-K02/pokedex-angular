@@ -10,6 +10,7 @@ import {
 } from "@angular/core";
 import { DomSanitizer, SafeResourceUrl } from "@angular/platform-browser";
 import { takeUntilDestroyed, toSignal } from "@angular/core/rxjs-interop";
+import { ActivatedRoute } from "@angular/router";
 import { MatButtonModule } from "@angular/material/button";
 import { MatCardModule } from "@angular/material/card";
 import { MatIconModule } from "@angular/material/icon";
@@ -17,10 +18,12 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatTabsModule } from "@angular/material/tabs";
 import { BaseChartDirective } from "ng2-charts";
 import { ChartConfiguration } from "chart.js";
+import { provideCharts, withDefaultRegisterables } from "ng2-charts";
 import { PokemonStore } from "../../../state/pokemon.store";
 import { sortStatsForRadar, totalBaseStats } from "../../../api/pokeapi.util";
 import { PokemonDetails } from "../../../api/models";
 import { TypeBadgeComponent } from "../../../shared/type-badge/type-badge.component";
+import { distinctUntilChanged, map } from "rxjs";
 
 const YOUTUBE_BY_POKEMON_ID: Record<number, string> = {
   1: "https://www.youtube.com/embed/S2y9Qw1lH3Q",
@@ -44,6 +47,7 @@ const YOUTUBE_BY_POKEMON_ID: Record<number, string> = {
     BaseChartDirective,
     TypeBadgeComponent,
   ],
+  providers: [provideCharts(withDefaultRegisterables())],
   templateUrl: "./pokemon-detail-panel.component.html",
   styleUrl: "./pokemon-detail-panel.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -52,8 +56,23 @@ export class PokemonDetailPanelComponent {
   private readonly store = inject(PokemonStore);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
 
   public readonly pokemonId = input<number | null>(null);
+
+  private readonly routePokemonId = toSignal(
+    this.route.paramMap.pipe(
+      map((pm) => {
+        const raw = pm.get("id");
+        const id = raw ? Number(raw) : null;
+        return Number.isFinite(id) ? id : null;
+      }),
+      distinctUntilChanged(),
+    ),
+    { initialValue: null },
+  );
+
+  public readonly effectivePokemonId = computed(() => this.pokemonId() ?? this.routePokemonId());
 
   public readonly activeTab = signal<"overview" | "moves" | "evolution">("overview");
   public readonly videoOpen = signal(false);
@@ -61,7 +80,7 @@ export class PokemonDetailPanelComponent {
   public readonly state = toSignal(this.store.state$, { initialValue: this.store.getSnapshot() });
 
   public readonly details = computed<PokemonDetails | null>(() => {
-    const id = this.pokemonId();
+    const id = this.effectivePokemonId();
     if (!id) return null;
     return this.state().detailsById[id] ?? null;
   });
@@ -75,13 +94,13 @@ export class PokemonDetailPanelComponent {
   });
 
   public readonly cryUrl = computed(() => {
-    const id = this.pokemonId();
+    const id = this.effectivePokemonId();
     if (!id) return null;
     return `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`;
   });
 
   public readonly safeVideoUrl = computed<SafeResourceUrl | null>(() => {
-    const id = this.pokemonId();
+    const id = this.effectivePokemonId();
     if (!id) return null;
     const base = YOUTUBE_BY_POKEMON_ID[id] ?? "https://www.youtube.com/embed/4xKJ7b9nq8c";
     const url = this.videoOpen() ? `${base}?autoplay=1&mute=0` : base;
@@ -130,7 +149,7 @@ export class PokemonDetailPanelComponent {
    * Loads details when the selected Pokemon id changes.
    */
   public readonly loadEffect = effect(() => {
-    const id = this.pokemonId();
+    const id = this.effectivePokemonId();
     if (!id) return;
     this.store.loadPokemonDetails(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
     // Simple analytics log (per assessment requirement).
