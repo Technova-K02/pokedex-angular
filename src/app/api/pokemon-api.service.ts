@@ -30,9 +30,6 @@ const GET_POKEMON_PAGE = gql`
           name
         }
       }
-      pokemon_v2_pokemonsprites(limit: 1) {
-        sprites
-      }
     }
   }
 `;
@@ -137,7 +134,6 @@ export class PokemonApiService {
             base_stat: number;
             pokemon_v2_stat: { name: string };
           }>;
-          pokemon_v2_pokemonsprites: Array<{ sprites: string }>;
         }>;
       }>({
         query: GET_POKEMON_PAGE,
@@ -212,7 +208,6 @@ export class PokemonApiService {
    * @returns PokemonListItem
    */
   private mapListItem(p: any): PokemonListItem {
-    const spriteJson = p.pokemon_v2_pokemonsprites?.[0]?.sprites ?? null;
     const stats: PokemonStat[] = p.pokemon_v2_pokemonstats.map((s: any) => ({
       name: s.pokemon_v2_stat.name,
       base_stat: s.base_stat,
@@ -225,7 +220,9 @@ export class PokemonApiService {
       weight: p.weight,
       types: p.pokemon_v2_pokemontypes.map((t: any) => t.pokemon_v2_type.name),
       stats,
-      spriteUrl: pickSpriteUrl(spriteJson),
+      // Fast path: avoid requesting/parsing the large `sprites` JSON blob for list pages.
+      // The default sprite is stable and lightweight to derive from id.
+      spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`,
     };
   }
 
