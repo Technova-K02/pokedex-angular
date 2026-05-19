@@ -67,7 +67,7 @@ export class PokedexPageComponent {
 
   public readonly searchControl = new FormControl<string>("", { nonNullable: true });
 
-  private readonly limit = 50;
+  private readonly limit = 20;
   private readonly offsetSubject = new BehaviorSubject<number>(0);
 
   public readonly state = toSignal(this.store.state$, { initialValue: this.store.getSnapshot() });
@@ -172,7 +172,6 @@ export class PokedexPageComponent {
   public readonly initEffect = effect(() => {
     if (this.state().pokemonIds.length) return;
     this.loadMore();
-    this.store.loadTypeEfficacies().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
   });
 
   /**
