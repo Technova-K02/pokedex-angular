@@ -166,7 +166,9 @@ module.exports = {
       score_opponent: 0,
     },
   ],
-  battle_log: [
+  // Note: json-graphql-server has trouble with certain snake_case collection names
+  // when auto-creating relationship resolvers. `battleLogs` keeps the schema valid.
+  battleLogs: [
     {
       id: 1,
       battle_id: 1,
@@ -204,4 +206,3 @@ module.exports = {
     },
   ],
 };
-
